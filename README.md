@@ -1,2 +1,2 @@
-# melvin
+# Edith
 Reliable messaging using Kafka
