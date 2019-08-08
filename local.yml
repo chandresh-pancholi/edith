@@ -1,0 +1,41 @@
+port: 8080
+kafka:
+  brokers:
+    - "localhost:9092"
+  replication: 1
+
+elasticsearch:
+  nodes:
+    - "http://localhost:9200"
+  event.index: "edith-lms"
+  client.index: "edith-client"
+  client.index.type: "edith-client-type"
+mysql:
+  driver: "mysql"
+  host: "localhost"
+  port: 3306
+  username: "root"
+  password: ""
+  database: "edith"
+  maxConnection: 20
+  idleConnection: 20
+prometheus:
+  namespace: "edith"
+jaeger:
+  serviceName: "edith"
+  collector:
+    host: "localhost"
+    port: 14268
+    path: "/api/traces"
+  agent:
+    host: "localhost"
+    port: 6831
+
+zap:
+  log:
+    enabled: false
+    file: "/var/log/edith/app.log"
+    maxsize: 200
+    maxbackups: 30
+    localtime: true
+    compress: true
