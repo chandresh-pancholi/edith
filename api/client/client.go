@@ -37,7 +37,7 @@ func NewClientHandler(db *mysql.DB, logger *zap.Logger, adminClient *admin.Admin
 	return h
 }
 
-//CreateClient creates new client in MSG
+//CreateClient creates new client in Edith
 func (h *Handler) CreateClient(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var client model.Consumer

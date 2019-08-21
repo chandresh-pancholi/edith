@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"time"
 
-
 	"go.uber.org/zap"
 
 	"github.com/Shopify/sarama"
@@ -61,6 +60,7 @@ func Invoke(msg *sarama.ConsumerMessage, consumerList []model.Consumer, logger *
 		deliveredMessage.Status = constant.Success
 		deliveredMessage.GroupID = c.GroupID
 
+		//stats.RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(c.ocView.Key("topic"), msg.Topic), tag.Upsert(c.ocView.Key("groupId"))},metrics.KafkaSuccessfulConsumed.M(1))
 		fmt.Sprintf("%s", deliveredMessage)
 	}
 }

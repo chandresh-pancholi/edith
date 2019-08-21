@@ -3,19 +3,14 @@ package metrics
 import (
 	"context"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"go.opencensus.io/metric"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 )
 
-//CreateMetricsFactory is
-func CreateMetricsFactory(namespace string) {
-	metric.NewRegistry()
-}
+var EMPTY  = ""
+func counterMetrics(viewName, name string, labels map[string]string) {
 
-func counterMetrics(namespace, name string, labels map[string]string) {
 	keyMethod, _ := tag.NewKey("status")
 	mLinesIn := stats.Int64("repl/lines_in", "The number of lines read in", stats.UnitDimensionless)
 	lineCountView := &view.View{
@@ -34,33 +29,17 @@ func counterMetrics(namespace, name string, labels map[string]string) {
 	stats.Record(ctx, mLinesIn.M(1))
 }
 
-func gaugeMetrics(namespace, name string, labels map[string]string) prometheus.Gauge {
-	gauge := prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace:   namespace,
-			Name:        name,
-			ConstLabels: labels,
-		})
-	return gauge
-}
+func counter(viewName, name string)  {
+	//https://github.com/ipfs/ipfs-cluster/blob/d8c20adc4e4779cad10bc8fd3eddfdb694868a9f/observations/metrics.go
+	mLinesIn := stats.Int64(name, EMPTY, stats.UnitDimensionless)
 
-func histogramMetrics(namespace, name string, labels map[string]string) prometheus.Histogram {
-	histogram := prometheus.NewHistogram(
-		prometheus.HistogramOpts{
-			Namespace:   namespace,
-			Name:        name,
-			ConstLabels: labels,
-		})
-	return histogram
-}
-
-func summaryMetrics(namespace, name string, labels map[string]string) prometheus.Summary {
-	summary := prometheus.NewSummary(
-		prometheus.SummaryOpts{
-			Namespace:   namespace,
-			Name:        name,
-			ConstLabels: labels,
-		})
-
-	return summary
+	countView := &view.View{
+		Name: viewName,
+		Measure: mLinesIn,
+		Description: EMPTY,
+		Aggregation: view.Count(),
+	}
+	if err := view.Register(countView); err != nil {
+		//p.logger.Error("Failed to register views:", zap.Error(err))
+	}
 }

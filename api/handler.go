@@ -10,6 +10,7 @@ import (
 	"github.com/chandresh-pancholi/edith/pkg/kafka/admin"
 	"github.com/chandresh-pancholi/edith/pkg/kafka/consumer"
 	"github.com/chandresh-pancholi/edith/pkg/kafka/producer"
+	"github.com/chandresh-pancholi/edith/pkg/metrics"
 	"github.com/chandresh-pancholi/edith/pkg/mysql"
 	"log"
 	"net/http"
@@ -30,7 +31,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Server info required to run MSG as backend service
+// Server info required to run Edith as backend service
 type Server struct {
 	logger      *zap.Logger
 	port        string
@@ -41,7 +42,7 @@ type Server struct {
 	db          *mysql.DB
 }
 
-// NewServer . create new MSG server struct
+// NewServer . create new Edith server struct
 func NewServer() *Server {
 	s := new(Server)
 
@@ -88,7 +89,7 @@ func newRouter() *http.ServeMux {
 	return mux
 }
 
-// Run method is to run MSG application
+// Run method is to run Edith application
 func (s *Server) Run() {
 
 	defer s.logger.Sync()
@@ -100,13 +101,13 @@ func (s *Server) Run() {
 
 	h := &ochttp.Handler{Handler: s.router}
 	if err := view.Register(ochttp.DefaultServerViews...); err != nil {
-		log.Fatal("Failed to register ochttp.DefaultServerViews")
+		log.Fatal("failed to register ochttp.DefaultServerViews")
 	}
 	s.initialiseConsumer()
-	s.logger.Info("MSG is listening at port", zap.String("port", s.port))
+	s.logger.Info("edith is listening at port", zap.String("port", s.port))
 	err := http.ListenAndServe(fmt.Sprintf(":%s", s.port), h)
 	if err != nil {
-		s.logger.Error("MSG starting failed ", zap.String("port", s.port), zap.Error(err))
+		s.logger.Error("edith starting failed ", zap.String("port", s.port), zap.Error(err))
 		return
 	}
 
@@ -179,6 +180,12 @@ func (s *Server) observability() {
 
 	s.logger.Info("registering prometheus exporter")
 	view.RegisterExporter(pe)
+
+	// register the metrics views of interest
+	views := metrics.OCView{s.logger}
+	if err := view.Register(views.OCViews()...); err != nil {
+		s.logger.Error("failed to register oc views")
+	}
 
 	s.router.Handle("/metrics", pe)
 }
