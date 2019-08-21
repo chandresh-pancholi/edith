@@ -1,5 +1,5 @@
 # Edith
-Reliable messaging using Kafka
+Reliable messaging among multiple microservices using message brokers like Kafka, RabbitMQ, NATS Streaming, Kinesis, Google pub sub, Azure event hubs. Currently edith supports Kafka. Future releases will support mentioned message brokers.
 
 Modern day architecture build upon Microservice Architecture to build & ship product very fast.
 
@@ -22,7 +22,12 @@ Edith currently supports Apache Kafka for Async reliable communication among mic
     1. Docker
     2. Kubernetes
     3. Istio
-    
+ 
+#### Regular Microservice Architecture
+ ![Alt text](docs/micro-architecture.png?raw=true "Title")  
+   
+#### Microservice Architecture with Edith
+![Alt text](docs/edith-01.png?raw=true "Title")
 #### Road map
 
 ##### MVP - V1

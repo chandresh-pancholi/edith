@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package edith.api;
+
+import "proto/consumer.proto";
+
+option go_package = "edith.api_v1";
+
+
+service ConsumerService {
+    rpc GetConsumer(GetConsumerRequest) returns (Consumer) {};
+
+    rpc CreateConsumer(Consumer) returns (Consumer) {} ;
+
+    rpc StopConsumer(GetConsumerRequest) returns (Consumer) {} ;
+}
+
+message GetConsumerRequest {
+    string name = 1;
+}
