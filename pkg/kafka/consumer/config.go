@@ -3,9 +3,9 @@ package consumer
 import (
 	"github.com/chandresh-pancholi/edith/pkg/elasticsearch"
 	es "github.com/chandresh-pancholi/edith/pkg/elasticsearch/config"
+	"github.com/chandresh-pancholi/edith/pkg/metrics"
 	"github.com/chandresh-pancholi/edith/pkg/rest"
 	"go.uber.org/zap"
-
 
 	"github.com/spf13/viper"
 
@@ -15,6 +15,7 @@ import (
 // GroupHandler represents a Sarama consumer group consumer
 type GroupHandler struct {
 	esClient *es.ESClient
+	ocView *metrics.OCView
 	logger   *zap.Logger
 }
 
@@ -35,6 +36,7 @@ func NewKafkaConsumer(groupID string, esClient *es.ESClient, logger *zap.Logger)
 
 	handler := GroupHandler{
 		esClient: esClient,
+		ocView: &metrics.OCView{logger},
 		logger:   logger,
 	}
 
@@ -55,6 +57,7 @@ func (c *GroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sara
 		if err != nil {
 			c.logger.Error("es response to consumer mapping failed", zap.String("index", viper.GetString("elasticsearch.client.index")), zap.String("topic", message.Topic), zap.Any("es_response", esResponse), zap.Error(err))
 		}
+
 		rest.Invoke(message, consumerList, c.logger)
 
 		sess.MarkMessage(message, "")

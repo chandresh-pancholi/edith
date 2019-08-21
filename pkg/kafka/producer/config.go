@@ -1,7 +1,11 @@
 package producer
 
 import (
+	"context"
 	"github.com/chandresh-pancholi/edith/model"
+	"github.com/chandresh-pancholi/edith/pkg/metrics"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -10,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-//EventPublishMetrics is custom metrics for MSG
+//EventPublishMetrics is custom metrics for Edith
 type EventPublishMetrics struct {
 	EvntWrittenSuccess  prometheus.Counter
 	EventWrittenFailure prometheus.Counter
@@ -19,6 +23,7 @@ type EventPublishMetrics struct {
 //Producer metrics
 type Producer struct {
 	sarama.AsyncProducer
+	*metrics.OCView
 	logger *zap.Logger
 }
 
@@ -35,6 +40,7 @@ func NewProducer(logger *zap.Logger) (*Producer, error) {
 	p := &Producer{
 		AsyncProducer: asyncProducer,
 		logger:        logger,
+		OCView: &metrics.OCView{logger},
 	}
 	p.Errors()
 	p.Successes()
@@ -64,8 +70,8 @@ func (p *Producer) Errors() {
 
 			//TODO custom prometheus counter metrics for failure
 			//TODO pass this message to Elasticsearch as undelivered message so that daemon can process it further
+			stats.RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(p.OCView.Key("topic"), err.Msg.Topic)},metrics.KafkaProducedFailed.M(1))
 
-			//metrics.Counter("kafka_event_ingestion_failed", map[string]string{"status": "failed", "topic": err.Msg.Topic}).Inc()
 			p.logger.Error("failed to emit event to kafka", zap.String("topic", err.Msg.Topic), zap.String("key", string(keyBytes)), zap.String("error", err.Error()))
 		}
 	}()
@@ -83,6 +89,8 @@ func (p *Producer) Successes() {
 			//https://github.com/census-instrumentation/opencensus-go/blob/master/examples/quickstart/stats.go
 			//metrics.Counter("kafka_event_ingestion_success", map[string]string{"status": "success", "topic": edith.Topic}).Inc()
 			//TODO custom prometheus counter metrics for success
+			stats.RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(p.OCView.Key("topic"), msg.Topic)},metrics.KafkaSuccessfulProduced.M(1))
+
 			p.logger.Info("successfully ingested event to kafka", zap.String("topic", msg.Topic), zap.String("key", string(keyBytes)))
 		}
 	}()
